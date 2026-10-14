@@ -1,19 +1,20 @@
-/// 앱 전체에서 쓰는 문구. 화면에 문자열을 직접 쓰지 말고 여기에 모아 둔다.
+/// 여러 화면에서 함께 쓰는 문구. 한 화면에서만 쓰는 문구는 해당 화면에 둔다.
 class AppStrings {
   AppStrings._();
 
-  static const appName = '데일리 로맨틱';
-  static const appNameEn = 'Daily Romantic';
+  static const appName = '데일리로맨틱';
+  static const tagline = '가는 길에 15분, 마음을 픽업하세요';
 
-  // 하단 탭 (UI/UX 논의 후 변경 예정)
+  // 하단 탭
   static const tabHome = '홈';
-  static const tabCalendar = '캘린더';
-  static const tabProfile = '마이';
+  static const tabOrders = '주문';
+  static const tabFavorites = '찜';
+  static const tabMy = 'MY';
 
-  static const comingSoon = '준비 중인 화면이에요';
+  static const back = '← 뒤로';
 
   // 로그인
-  static const loginSubtitle = '매일 조금 더 설레는 우리';
+  static const loginSubtitle = '가는 길에 15분, 마음을 픽업하세요';
   static const loginWithKakao = '카카오로 시작하기';
   static const loginWithNaver = '네이버로 시작하기';
   static const loginFailed = '로그인에 실패했어요. 다시 시도해 주세요.';
