@@ -9,7 +9,8 @@ Flutter로 만든 iOS / Android 앱입니다. 코드 하나로 두 플랫폼을 
    - App Store에서 Xcode 설치
    - `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
    - `sudo xcodebuild -runFirstLaunch`
-   - CocoaPods 설치: `brew install cocoapods`
+   - Swift Package Manager 사용 설정 (CocoaPods 설치 불필요):
+     `flutter config --enable-swift-package-manager`
 3. Android 빌드: Android Studio 설치 후 에뮬레이터 생성
 4. `flutter doctor` 로 빠진 항목이 없는지 확인
 
