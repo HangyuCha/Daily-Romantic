@@ -147,4 +147,68 @@ void main() {
       expect(StepKind.fromOsrm('depart', null), StepKind.depart);
     });
   });
+
+  group('픽업 가능 시간', () {
+    RouteQuery queryWith(PickupWindow window) => RouteQuery(
+      origin: const Place(name: 'A', point: hongdae),
+      destination: const Place(name: 'B', point: sinchon),
+      // 67m/분 × 30분 = 2010m 경로
+      route: WalkingRoute(
+        points: const [hongdae, sinchon],
+        distanceMeters: 2010,
+        durationSeconds: 1800,
+      ),
+      recipient: Recipient.school,
+      category: GiftCategory.all,
+      window: window,
+    );
+
+    test('15분이면 가게까지 걷는 시간·준비 시간이 15분 넘는 곳은 뺀다', () {
+      final names = storesOnRoute(
+        queryWith(PickupWindow.min15),
+      ).map((s) => s.store.id);
+      // GS 4분, 모리 9분 → 포함 / 하루 16분, 캔들 24분 → 제외
+      expect(names, ['gs', 'mori']);
+    });
+
+    test('30분이면 모두 들를 수 있다', () {
+      expect(storesOnRoute(queryWith(PickupWindow.min30)).length, 4);
+    });
+  });
+
+  group('주문 진행 상태', () {
+    final created = DateTime(2026, 10, 14, 15, 0);
+    final order = PickupOrder(
+      code: 'A-1234',
+      store: mockStores.first,
+      items: const {},
+      message: '',
+      total: 0,
+      itemCount: 0,
+      createdAt: created,
+      pickupAt: created.add(const Duration(minutes: 20)),
+      paymentMethod: PaymentMethod.card,
+    );
+
+    test('시간이 지나면 준비 → 포장 → 픽업 가능', () {
+      expect(order.stageAt(created), PickupStage.preparing);
+      expect(
+        order.stageAt(created.add(const Duration(minutes: 12))),
+        PickupStage.packed,
+      );
+      expect(
+        order.stageAt(created.add(const Duration(minutes: 20))),
+        PickupStage.ready,
+      );
+    });
+
+    test('픽업 시각 30분 뒤까지 진행 중으로 보고, 그 뒤엔 홈에서 사라진다', () {
+      final pickup = created.add(const Duration(minutes: 20));
+      expect(order.isActiveAt(pickup.add(const Duration(minutes: 29))), isTrue);
+      expect(
+        order.isActiveAt(pickup.add(const Duration(minutes: 31))),
+        isFalse,
+      );
+    });
+  });
 }
