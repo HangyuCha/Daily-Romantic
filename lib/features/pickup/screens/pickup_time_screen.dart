@@ -14,7 +14,7 @@ class PickupTimeScreen extends StatefulWidget {
 
   final Cart cart;
 
-  static const minuteOptions = [12, 20, 30];
+  static const allMinuteOptions = [10, 15, 20, 30];
 
   @override
   State<PickupTimeScreen> createState() => _PickupTimeScreenState();
@@ -22,10 +22,16 @@ class PickupTimeScreen extends StatefulWidget {
 
 class _PickupTimeScreenState extends State<PickupTimeScreen> {
   // 가게 도착 시간과 준비 시간을 둘 다 넘기는 가장 빠른 시간을 기본으로 고른다.
-  late var _minutes = PickupTimeScreen.minuteOptions.firstWhere(
+  late var _minutes = _options.firstWhere(
     (m) => m >= _earliestMinutes,
-    orElse: () => PickupTimeScreen.minuteOptions.last,
+    orElse: () => _options.last,
   );
+
+  /// S1에서 고른 시간(15분/30분) 안의 선택지만 보여준다.
+  List<int> get _options => [
+    for (final m in PickupTimeScreen.allMinuteOptions)
+      if (m <= widget.cart.window.minutes) m,
+  ];
 
   int get _earliestMinutes {
     final cart = widget.cart;
@@ -72,7 +78,7 @@ class _PickupTimeScreenState extends State<PickupTimeScreen> {
         ),
         children: [
           ChoiceChipGroup<int>(
-            options: PickupTimeScreen.minuteOptions,
+            options: _options,
             selected: _minutes,
             labelOf: (m) => '$m분 후',
             onSelected: (m) => setState(() => _minutes = m),

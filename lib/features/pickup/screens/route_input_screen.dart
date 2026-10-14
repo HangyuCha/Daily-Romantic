@@ -7,6 +7,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/choice_chip_group.dart';
 import '../../../shared/widgets/page_scaffold.dart';
 import '../data/models.dart';
+import '../../orders/active_order_banner.dart';
+import '../widgets/pickup_window_picker.dart';
 import 'store_list_screen.dart';
 
 /// S1. 홈 — 경로(필수) + 받는 사람 + 카테고리 입력
@@ -21,6 +23,8 @@ class RouteInputScreen extends StatefulWidget {
 class _RouteInputScreenState extends State<RouteInputScreen> {
   final _origin = TextEditingController();
   final _destination = TextEditingController(text: '신촌역');
+  final _recipientNote = TextEditingController();
+  var _window = PickupWindow.min15;
   var _recipient = Recipient.school;
   var _category = GiftCategory.all;
 
@@ -36,6 +40,7 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
     super.initState();
     _origin.addListener(_onOriginEdited);
     _destination.addListener(() => setState(() {}));
+    _recipientNote.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) => _locate());
   }
 
@@ -43,6 +48,7 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
   void dispose() {
     _origin.dispose();
     _destination.dispose();
+    _recipientNote.dispose();
     super.dispose();
   }
 
@@ -84,7 +90,8 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
       !_searching &&
       !_locating &&
       _origin.text.trim().isNotEmpty &&
-      _destination.text.trim().isNotEmpty;
+      _destination.text.trim().isNotEmpty &&
+      (_recipient != Recipient.other || _recipientNote.text.trim().isNotEmpty);
 
   Future<void> _search() async {
     FocusScope.of(context).unfocus();
@@ -122,7 +129,11 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
               destination: destination,
               route: route,
               recipient: _recipient,
+              recipientNote: _recipient == Recipient.other
+                  ? _recipientNote.text.trim()
+                  : '',
               category: _category,
+              window: _window,
             ),
           ),
         ),
@@ -167,6 +178,7 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
     );
     return Scaffold(
       body: PageScaffold(
+        top: const ActiveOrderBanner(),
         title: '어디로 가세요?',
         subtitle: '목적지로 가는 길목에서 15분 안에 들를 수 있는 가게를 찾아드려요.',
         bottom: FilledButton(
@@ -231,6 +243,13 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+          Text('언제까지 픽업할 수 있어야 하나요?', style: labelStyle),
+          const SizedBox(height: AppSpacing.sm),
+          PickupWindowPicker(
+            selected: _window,
+            onSelected: (w) => setState(() => _window = w),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           Text('누구에게 주실 건가요?', style: labelStyle),
           const SizedBox(height: AppSpacing.sm),
           ChoiceChipGroup<Recipient>(
@@ -239,6 +258,19 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
             labelOf: (r) => r.label,
             onSelected: (r) => setState(() => _recipient = r),
           ),
+          if (_recipient == Recipient.other) ...[
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _recipientNote,
+              autofocus: true,
+              maxLength: 20,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                hintText: '누구에게 주시나요? (예: 부모님, 동아리 후배)',
+                counterText: '',
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           Text('무엇을 찾으세요?', style: labelStyle),
           const SizedBox(height: AppSpacing.sm),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
@@ -24,26 +26,23 @@ class PickupCodeScreen extends StatefulWidget {
   State<PickupCodeScreen> createState() => _PickupCodeScreenState();
 }
 
-class _PickupCodeScreenState extends State<PickupCodeScreen>
-    with SingleTickerProviderStateMixin {
-  // 가게 쪽 상태 연동 전까지 30% → 85%로 진행하는 애니메이션으로 표현한다.
-  late final _progress = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 4),
-    lowerBound: 0.3,
-    upperBound: 0.85,
-  )..forward();
+class _PickupCodeScreenState extends State<PickupCodeScreen> {
+  late final Timer _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    // 가게 쪽 상태 연동 전까지는 주문~픽업 시각의 시간 흐름으로 진행 상황을 보여준다.
+    _ticker = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => setState(() {}),
+    );
+  }
 
   @override
   void dispose() {
-    _progress.dispose();
+    _ticker.cancel();
     super.dispose();
-  }
-
-  PickupStage _stageFor(double value) {
-    if (value >= 0.9) return PickupStage.ready;
-    if (value >= 0.5) return PickupStage.packed;
-    return PickupStage.preparing;
   }
 
   @override
@@ -103,18 +102,24 @@ class _PickupCodeScreenState extends State<PickupCodeScreen>
                       style: muted,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    AnimatedBuilder(
-                      animation: _progress,
-                      builder: (context, _) {
-                        final stage = _stageFor(_progress.value);
+                    Builder(
+                      builder: (context) {
+                        final now = DateTime.now();
+                        final stage = order.stageAt(now);
+                        // 막 주문했을 때도 진행 중인 게 보이도록 10%에서 시작
+                        final value = 0.1 + 0.9 * order.progressAt(now);
                         return Column(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: _progress.value,
-                                minHeight: 8,
-                                backgroundColor: scheme.outline,
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(end: value),
+                              duration: const Duration(milliseconds: 600),
+                              builder: (context, v, _) => ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: v,
+                                  minHeight: 8,
+                                  backgroundColor: scheme.outline,
+                                ),
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),

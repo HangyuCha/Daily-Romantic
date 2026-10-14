@@ -19,7 +19,21 @@ void main() {
     mapServices: mapServices ?? fakeMapServices(),
   );
 
+  void useTallScreen(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+  }
+
   Future<void> tapText(WidgetTester tester, String text) async {
+    // 목록 아래쪽이라 아직 그려지지 않았으면 스크롤해서 찾는다.
+    if (find.text(text).evaluate().isEmpty) {
+      await tester.scrollUntilVisible(
+        find.text(text),
+        300,
+        scrollable: find.byType(Scrollable).hitTestable().first,
+      );
+    }
     await tester.ensureVisible(find.text(text).first);
     await tester.tap(find.text(text).first);
     await tester.pumpAndSettle();
@@ -52,9 +66,10 @@ void main() {
     expect(find.text('1개 담기 · 9,800원'), findsOneWidget);
     await tapText(tester, '1개 담기 · 9,800원');
 
-    // S4
+    // S4: 15분 이내를 골랐으므로 15분 넘는 선택지는 없다
     expect(find.text('픽업 시간 선택'), findsOneWidget);
-    await tapText(tester, '20분 후');
+    expect(find.text('20분 후'), findsNothing);
+    await tapText(tester, '15분 후');
     await tapText(tester, '결제하고 픽업 예약');
 
     // 결제 (시연용): 동의 전에는 결제 버튼 비활성화
@@ -108,6 +123,7 @@ void main() {
   });
 
   testWidgets('카테고리를 고르면 해당 가게만 보인다', (tester) async {
+    useTallScreen(tester);
     await tester.pumpWidget(signedInApp());
     await tester.pumpAndSettle();
 
@@ -176,5 +192,69 @@ void main() {
     await tapText(tester, '가는 길 가게 찾기');
     expect(find.textContaining("'없는장소'을(를) 찾지 못했어요"), findsOneWidget);
     expect(find.text('어디로 가세요?'), findsOneWidget);
+  });
+
+  testWidgets('픽업 시간 15분/30분에 따라 들를 수 있는 가게가 달라진다', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(signedInApp());
+    await tester.pumpAndSettle();
+
+    // 기본 15분 이내: 가게까지 19분 걸리는 캔들샵은 빠진다 (가짜 경로 24분 기준)
+    await tapText(tester, '가는 길 가게 찾기');
+    expect(find.textContaining('15분 이내 픽업 가능 · 3곳'), findsOneWidget);
+    expect(find.textContaining('소소한 캔들샵'), findsNothing);
+    await tapText(tester, '← 뒤로');
+
+    await tapText(tester, '30분 이내');
+    await tapText(tester, '가는 길 가게 찾기');
+    expect(find.textContaining('30분 이내 픽업 가능 · 4곳'), findsOneWidget);
+    await tapText(tester, '4. 소소한 캔들샵');
+    expect(find.text('소소한 캔들샵'), findsOneWidget); // S3 제목
+  });
+
+  testWidgets('받는 사람 기타는 직접 입력해야 검색할 수 있다', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(signedInApp());
+    await tester.pumpAndSettle();
+
+    await tapText(tester, '✏️ 기타');
+    final search = find.widgetWithText(FilledButton, '가는 길 가게 찾기');
+    expect(tester.widget<FilledButton>(search).onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField).last, '부모님');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(search).onPressed, isNotNull);
+  });
+
+  testWidgets('주문하면 홈 상단에 주문 상태가 뜬다', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(signedInApp());
+    await tester.pumpAndSettle();
+    expect(find.text('가게에서 준비 중이에요'), findsNothing);
+
+    await tapText(tester, '가는 길 가게 찾기');
+    await tapText(tester, '2. 모리 베이커리');
+    await tester.tap(find.byTooltip('더하기').first);
+    await tester.pump();
+    await tapText(tester, '1개 담기 · 9,800원');
+    await tapText(tester, '결제하고 픽업 예약');
+    await tapText(tester, '주문 내용을 확인했으며 결제에 동의합니다.');
+    await tester.tap(find.widgetWithText(FilledButton, '9,800원 결제하기'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+    final code = tester
+        .widget<Text>(find.textContaining(RegExp(r'^[A-Z]-\d{4}$')))
+        .data!;
+    await tapText(tester, '처음으로');
+
+    // 홈 상단 배너
+    expect(find.text('가게에서 준비 중이에요'), findsOneWidget);
+    expect(find.text(code), findsOneWidget);
+    expect(find.textContaining('모리 베이커리 · '), findsOneWidget);
+
+    // 배너를 누르면 픽업 코드 화면
+    await tapText(tester, '가게에서 준비 중이에요');
+    expect(find.text('매장에서 이 코드를 보여주세요'), findsOneWidget);
   });
 }

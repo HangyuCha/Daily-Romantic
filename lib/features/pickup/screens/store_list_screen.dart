@@ -24,6 +24,7 @@ class StoreListScreen extends StatelessWidget {
           store: s.store,
           storePoint: s.point,
           walkMinutes: s.walkMinutes,
+          window: query.window,
         ),
       ),
     );
@@ -57,7 +58,7 @@ class StoreListScreen extends StatelessWidget {
         title: '경로 위 픽업 가능 가게',
         subtitle:
             '${query.origin.name} → ${query.destination.name}\n'
-            '도보 ${query.route.durationMinutes}분 · 우회 15분 이내 · ${stores.length}곳',
+            '도보 ${query.route.durationMinutes}분 · ${query.window.label} 픽업 가능 · ${stores.length}곳',
         children: [
           RoutePreviewMap(
             query: query,
@@ -76,7 +77,10 @@ class StoreListScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
               child: Text(
-                '조건에 맞는 가게가 없어요.\n다른 카테고리를 골라 보세요.',
+                query.window == PickupWindow.min15
+                    ? '15분 안에 들를 수 있는 가게가 없어요.\n'
+                          '30분 이내로 바꾸거나 다른 카테고리를 골라 보세요.'
+                    : '조건에 맞는 가게가 없어요.\n다른 카테고리를 골라 보세요.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
