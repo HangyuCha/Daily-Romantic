@@ -24,7 +24,11 @@ class PickupStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  PickupOrder placeOrder(Cart cart, {required int pickupInMinutes}) {
+  PickupOrder placeOrder(
+    Cart cart, {
+    required int pickupInMinutes,
+    required PaymentMethod paymentMethod,
+  }) {
     final now = DateTime.now();
     final order = PickupOrder(
       code: _newCode(),
@@ -35,6 +39,7 @@ class PickupStore extends ChangeNotifier {
       itemCount: cart.itemCount,
       createdAt: now,
       pickupAt: now.add(Duration(minutes: pickupInMinutes)),
+      paymentMethod: paymentMethod,
     );
     _orders.add(order);
     notifyListeners();

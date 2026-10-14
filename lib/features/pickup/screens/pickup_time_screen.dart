@@ -6,8 +6,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/choice_chip_group.dart';
 import '../../../shared/widgets/page_scaffold.dart';
 import '../data/models.dart';
-import '../data/pickup_store.dart';
-import 'pickup_code_screen.dart';
+import 'payment_screen.dart';
 
 /// S4. 픽업 시간 선택 및 주문 확인
 class PickupTimeScreen extends StatefulWidget {
@@ -24,14 +23,12 @@ class PickupTimeScreen extends StatefulWidget {
 class _PickupTimeScreenState extends State<PickupTimeScreen> {
   var _minutes = PickupTimeScreen.minuteOptions.first;
 
-  void _reserve() {
-    // TODO: 결제 수단 선택·결제 연동 (화면 정의서 '확인 필요' 항목)
-    final order = PickupScope.of(
-      context,
-    ).placeOrder(widget.cart, pickupInMinutes: _minutes);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => PickupCodeScreen(order: order)),
-      (route) => route.isFirst,
+  void _goToPayment() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            PaymentScreen(cart: widget.cart, pickupInMinutes: _minutes),
+      ),
     );
   }
 
@@ -49,7 +46,7 @@ class _PickupTimeScreenState extends State<PickupTimeScreen> {
         title: '픽업 시간 선택',
         subtitle: '경로 도착 예상 시각에 맞춰 가게가 준비해둬요.',
         bottom: FilledButton(
-          onPressed: _reserve,
+          onPressed: _goToPayment,
           child: const Text('결제하고 픽업 예약'),
         ),
         children: [
