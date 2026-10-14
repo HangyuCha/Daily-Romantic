@@ -11,4 +11,11 @@ class AppStrings {
   static const tabProfile = '마이';
 
   static const comingSoon = '준비 중인 화면이에요';
+
+  // 로그인
+  static const loginSubtitle = '매일 조금 더 설레는 우리';
+  static const loginWithKakao = '카카오로 시작하기';
+  static const loginWithNaver = '네이버로 시작하기';
+  static const loginFailed = '로그인에 실패했어요. 다시 시도해 주세요.';
+  static const logout = '로그아웃';
 }

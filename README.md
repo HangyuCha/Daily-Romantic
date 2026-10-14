@@ -13,11 +13,18 @@ Flutter로 만든 iOS / Android 앱입니다. 코드 하나로 두 플랫폼을 
 3. Android 빌드: Android Studio 설치 후 에뮬레이터 생성
 4. `flutter doctor` 로 빠진 항목이 없는지 확인
 
+## 기술 스택
+
+- 앱: Flutter (iOS + Android)
+- DB · 로그인: Supabase (무료 플랜) — 카카오 / 네이버 로그인
+- 설정 방법: [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md)
+
 ## 실행
 
 ```bash
 flutter pub get
-flutter run            # 연결된 기기/시뮬레이터에서 실행
+flutter run --dart-define-from-file=env.json   # 로그인 포함 실행
+flutter run            # env.json 없이 UI만 확인
 flutter test           # 테스트
 flutter analyze        # 코드 검사
 ```
@@ -31,6 +38,8 @@ lib/
 ├── main.dart                 # 진입점
 ├── app.dart                  # MaterialApp, 테마 연결
 ├── core/
+│   ├── config/
+│   │   └── env.dart          # Supabase 주소·키 (env.json에서 주입)
 │   ├── constants/
 │   │   └── app_strings.dart  # 앱 문구 모음
 │   └── theme/
@@ -38,11 +47,15 @@ lib/
 │       ├── app_spacing.dart  # 여백·모서리 값
 │       └── app_theme.dart    # 라이트/다크 테마
 ├── features/                 # 기능(화면) 단위로 폴더 분리
+│   ├── auth/                 # 카카오·네이버 로그인
 │   ├── shell/main_shell.dart # 하단 탭 바
 │   ├── home/
 │   ├── calendar/
 │   └── profile/
 └── shared/widgets/           # 여러 화면에서 쓰는 공용 위젯
+
+supabase/migrations/          # DB 테이블 정의 (SQL)
+docs/                         # 설정 가이드
 ```
 
 ## 팀 규칙 (제안)
