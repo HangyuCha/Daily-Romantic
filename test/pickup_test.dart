@@ -44,10 +44,12 @@ void main() {
     final first = pickup.placeOrder(
       Cart(store)..setQuantity(store.menu.first, 1),
       pickupInMinutes: 12,
+      paymentMethod: PaymentMethod.kakaoPay,
     );
     final second = pickup.placeOrder(
       Cart(store)..setQuantity(store.menu.first, 2),
       pickupInMinutes: 20,
+      paymentMethod: PaymentMethod.card,
     );
 
     expect(first.code, matches(RegExp(r'^[A-Z]-\d{4}$')));

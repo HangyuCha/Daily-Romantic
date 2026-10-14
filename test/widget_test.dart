@@ -45,13 +45,24 @@ void main() {
     // S4
     expect(find.text('픽업 시간 선택'), findsOneWidget);
     await tapText(tester, '20분 후');
-    await tester.tap(find.text('결제하고 픽업 예약'));
+    await tapText(tester, '결제하고 픽업 예약');
+
+    // 결제 (시연용): 동의 전에는 결제 버튼 비활성화
+    expect(find.text('결제하기'), findsOneWidget);
+    final payButton = find.widgetWithText(FilledButton, '9,800원 결제하기');
+    expect(tester.widget<FilledButton>(payButton).onPressed, isNull);
+    await tapText(tester, '네이버페이');
+    await tapText(tester, '주문 내용을 확인했으며 결제에 동의합니다.');
+    await tester.tap(payButton);
     await tester.pump();
+    expect(find.text('네이버페이로 결제하는 중이에요'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump(const Duration(milliseconds: 500));
 
     // S5
     expect(find.text('픽업 준비 중이에요'), findsOneWidget);
     expect(find.textContaining(RegExp(r'^[A-Z]-\d{4}$')), findsOneWidget);
+    expect(find.textContaining('네이버페이 결제 완료'), findsOneWidget);
     await tester.pumpAndSettle();
     await tapText(tester, '처음으로');
     expect(find.text('어디로 가세요?'), findsOneWidget);

@@ -110,6 +110,18 @@ class Cart {
   bool get isEmpty => itemCount == 0;
 }
 
+/// 결제 수단. 지금은 시연용 결제라 실제 결제는 일어나지 않는다.
+enum PaymentMethod {
+  kakaoPay('카카오페이', '💛'),
+  naverPay('네이버페이', '💚'),
+  tossPay('토스페이', '💙'),
+  card('신용·체크카드', '💳');
+
+  const PaymentMethod(this.label, this.emoji);
+  final String label;
+  final String emoji;
+}
+
 enum PickupStage {
   preparing('가게 준비'),
   packed('포장 완료'),
@@ -130,6 +142,7 @@ class PickupOrder {
     required this.itemCount,
     required this.createdAt,
     required this.pickupAt,
+    required this.paymentMethod,
   });
 
   /// 픽업 코드. 형식: 알파벳 1자리 + 하이픈 + 숫자 4자리 (예: A-2741)
@@ -141,4 +154,5 @@ class PickupOrder {
   final int itemCount;
   final DateTime createdAt;
   final DateTime pickupAt;
+  final PaymentMethod paymentMethod;
 }

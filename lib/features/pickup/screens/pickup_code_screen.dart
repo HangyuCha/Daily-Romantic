@@ -140,7 +140,8 @@ class _PickupCodeScreenState extends State<PickupCodeScreen>
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       '픽업 예정 ${formatTime(order.pickupAt)} · '
-                      '${order.itemCount}개 · ${formatWon(order.total)}',
+                      '${order.itemCount}개 · ${formatWon(order.total)}\n'
+                      '${order.paymentMethod.label} 결제 완료',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
