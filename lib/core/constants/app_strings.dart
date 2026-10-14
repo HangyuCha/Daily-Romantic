@@ -16,7 +16,7 @@ class AppStrings {
   // 로그인
   static const loginSubtitle = '가는 길에 15분, 마음을 픽업하세요';
   static const loginWithKakao = '카카오로 시작하기';
-  static const loginWithNaver = '네이버로 시작하기';
+  static const loginWithEmail = '이메일로 로그인';
   static const loginFailed = '로그인에 실패했어요. 다시 시도해 주세요.';
   static const logout = '로그아웃';
 }

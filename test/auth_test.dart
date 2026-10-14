@@ -82,7 +82,7 @@ void main() {
         mapServices: fakeMapServices(),
       ),
     );
-    expect(find.text('로그인'), findsOneWidget);
+    expect(find.text('카카오로 시작하기'), findsOneWidget);
 
     // 회원가입
     await tester.tap(find.text('회원가입'));
@@ -112,7 +112,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(TextButton, '로그아웃').last);
     await tester.pumpAndSettle();
-    expect(find.text('로그인'), findsOneWidget);
+    expect(find.text('카카오로 시작하기'), findsOneWidget);
+
+    // 이메일 로그인 펼치기
+    await tester.tap(find.text('이메일로 로그인'));
+    await tester.pumpAndSettle();
 
     // 틀린 비밀번호 → 오류 안내
     final loginFields = find.byType(TextFormField);

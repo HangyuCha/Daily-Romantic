@@ -2,9 +2,7 @@ import 'package:flutter/widgets.dart';
 
 /// 로그인 방식
 enum SocialProvider {
-  kakao('kakao', '카카오'),
-  // 네이버는 Supabase 커스텀 OIDC provider로 등록한다 (식별자: custom:naver).
-  naver('custom:naver', '네이버');
+  kakao('kakao', '카카오');
 
   const SocialProvider(this.supabaseId, this.label);
 
@@ -25,12 +23,11 @@ class AppUser {
   final String nickname;
   final String? email;
 
-  /// email, kakao, custom:naver
+  /// email, kakao
   final String provider;
 
   String get providerLabel => switch (provider) {
     'kakao' => '카카오',
-    'custom:naver' => '네이버',
     _ => '이메일',
   };
 }

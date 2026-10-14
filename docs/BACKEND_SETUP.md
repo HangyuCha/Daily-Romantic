@@ -1,12 +1,11 @@
 # 백엔드 · 로그인 설정 가이드
 
-모두 무료 플랜으로 진행합니다. 순서대로 따라 하면 카카오 / 네이버 로그인이 동작합니다.
+모두 무료 플랜으로 진행합니다. 순서대로 따라 하면 이메일 / 카카오 로그인이 동작합니다.
 
 | 역할 | 서비스 | 무료 범위 (2026년 10월 기준, 변경될 수 있음) |
 | --- | --- | --- |
 | DB · 로그인 · 파일 저장 | [Supabase](https://supabase.com) Free | DB 500MB, 파일 1GB, 월 활성 사용자 5만 명, 프로젝트 2개 |
 | 카카오 로그인 | [Kakao Developers](https://developers.kakao.com) | 무료 |
-| 네이버 로그인 | [NAVER Developers](https://developers.naver.com) | 무료 |
 | 지도 | [OpenStreetMap](https://www.openstreetmap.org) 타일 | 무료, 가입·키 없음 |
 | 장소 검색 | [Nominatim](https://nominatim.org) | 무료, 가입·키 없음 (초당 1회) |
 | 도보 길찾기 | [OSRM 공개 서버](https://routing.openstreetmap.de) | 무료, 가입·키 없음 |
@@ -28,7 +27,7 @@
    ```
 5. **SQL Editor**에서 `supabase/migrations/` 안의 SQL 파일을 순서대로 실행 (profiles 테이블 생성)
 
-Supabase 콜백 주소 (카카오·네이버 설정에 사용):
+Supabase 콜백 주소 (카카오 설정에 사용):
 ```
 https://<프로젝트ID>.supabase.co/auth/v1/callback
 ```
@@ -45,53 +44,28 @@ Supabase는 이메일 로그인이 기본으로 켜져 있어서 따로 켤 필�
 
 ## 3. 카카오 로그인
 
-**Kakao Developers**
+**Kakao Developers** (2025년 개편 화면 기준)
 1. 내 애플리케이션 → 애플리케이션 추가
-2. **앱 키**에서 `REST API 키` 복사
-3. **카카오 로그인** → 활성화 ON
-4. **카카오 로그인 → Redirect URI**에 위의 Supabase 콜백 주소 등록
-5. **카카오 로그인 → 보안**에서 Client Secret 생성 후 복사 (활성화 상태로)
-6. **동의항목**: 닉네임, 프로필 사진 설정
-   - 이메일(`account_email`)은 비즈 앱 전환이 필요해서, 우선은 이메일 없이 진행합니다.
+2. **[앱] → [플랫폼 키] → [REST API 키]** 화면에서
+   - `REST API 키` 복사 → Supabase의 **Client ID**
+   - **카카오 로그인 리다이렉트 URI**에 위의 Supabase 콜백 주소 등록 (끝에 `/` 없이) → 오른쪽 아래 [저장]
+   - **클라이언트 시크릿** 코드 복사 → Supabase의 **Client Secret** (키를 만들 때 기본으로 켜져 있음)
+3. **[카카오 로그인] → [사용 설정]** 상태 ON (OFF면 `KOE004` 오류)
+4. **[카카오 로그인] → [동의항목]**: 닉네임, 프로필 사진 설정
+   - Supabase가 이메일(`account_email`)도 함께 요청하므로, 로그인 때 `KOE205` 오류가 나면 이메일 항목을 "선택 동의"로 켜야 합니다. 설정이 막혀 있으면 **개인 개발자 비즈 앱 전환**(무료, 본인인증)이 필요합니다.
 
 **Supabase**
 1. **Authentication → Sign In / Providers → Kakao** 켜기
-2. Client ID = REST API 키, Client Secret = 위에서 만든 시크릿
-3. 이메일 동의항목을 안 쓰므로 **이메일 없는 사용자 허용** 옵션을 켭니다
+2. Client ID = REST API 키, Client Secret = 클라이언트 시크릿 → Save
 
-## 4. 네이버 로그인
-
-네이버는 Supabase 기본 목록에 없어서 **커스텀 OIDC provider**로 등록합니다. 네이버가 OIDC 표준을 지원하므로 별도 서버 코드는 필요 없습니다. (무료 플랜은 커스텀 provider 3개까지)
-
-**NAVER Developers**
-1. Application → 애플리케이션 등록, 사용 API: **네이버 로그인**
-2. 제공 정보: 별명, 프로필 사진
-3. 환경: **iOS / Android / PC 웹** 추가
-   - PC 웹의 Callback URL에 **Supabase 커스텀 provider 화면에 표시되는 Callback URL**을 등록 (아래 Supabase 2번 참고)
-4. `Client ID`, `Client Secret` 복사
-5. 앱이 **개발 중** 상태면 **멤버 관리**에 등록한 테스터 계정만 로그인됩니다. 팀원 네이버 아이디를 미리 추가하세요.
-
-**Supabase**
-1. **Authentication → Sign In / Providers → Custom provider 추가**
-2. 아래처럼 입력
-   | 항목 | 값 |
-   | --- | --- |
-   | Type | OIDC |
-   | Identifier | `custom:naver` (앱 코드와 같아야 함) |
-   | Issuer URL | `https://nid.naver.com` |
-   | Client ID / Secret | 네이버에서 복사한 값 |
-   | Scopes | `openid`, `profile` |
-   | Email optional | 켜기 |
-3. 화면에 나오는 Callback URL을 네이버 Callback URL에 등록
-
-## 5. 실행해서 확인
+## 4. 실행해서 확인
 
 ```bash
 flutter run --dart-define-from-file=env.json
 ```
 
 `env.json` 없이 `flutter run`만 하면 **데모 모드**로 실행됩니다.
-서버 없이 앱 안에서만 회원가입·로그인이 동작하고(카카오·네이버 버튼도 바로 로그인 처리), 앱을 끄면 가입 정보가 사라집니다. UI 작업이나 발표 시연용입니다.
+서버 없이 앱 안에서만 회원가입·로그인이 동작하고(카카오 버튼도 바로 로그인 처리), 앱을 끄면 가입 정보가 사라집니다. UI 작업이나 발표 시연용입니다.
 
 ---
 

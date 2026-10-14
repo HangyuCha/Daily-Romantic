@@ -26,5 +26,4 @@ class AppColors {
   // 소셜 로그인 브랜드 컬러 (각 사 가이드 기준)
   static const kakao = Color(0xFFFEE500);
   static const kakaoText = Color(0xD9000000);
-  static const naver = Color(0xFF03C75A);
 }

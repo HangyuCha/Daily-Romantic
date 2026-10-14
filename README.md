@@ -17,7 +17,7 @@ Flutter로 만든 iOS / Android 앱입니다. 코드 하나로 두 플랫폼을 
 ## 기술 스택
 
 - 앱: Flutter (iOS + Android)
-- DB · 로그인: Supabase (무료 플랜) — 이메일 / 카카오 / 네이버 로그인
+- DB · 로그인: Supabase (무료 플랜) — 이메일 / 카카오 로그인
 - 지도·위치: OpenStreetMap 지도 + GPS + 도보 길찾기 (무료, 키 없음)
 - 결제: 시연용 화면 (실제 결제 없음)
 - 설정 방법: [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md)
@@ -52,7 +52,7 @@ lib/
 │       ├── app_spacing.dart  # 여백·모서리 값
 │       └── app_theme.dart    # 라이트/다크 테마
 ├── features/                 # 기능(화면) 단위로 폴더 분리
-│   ├── auth/                 # 로그인·회원가입 (이메일, 카카오, 네이버)
+│   ├── auth/                 # 로그인·회원가입 (이메일, 카카오)
 │   ├── pickup/               # 선물 픽업 주문 흐름 S1~S5
 │   │   ├── data/             # 모델, 임시 가게 데이터, 주문·찜 상태
 │   │   ├── screens/          # S1 경로 입력 ~ S5 픽업 코드
