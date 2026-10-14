@@ -11,7 +11,14 @@ class AppSpacing {
   /// 화면 좌우 기본 여백
   static const screenPadding = 20.0;
 
-  static const radiusSm = 8.0;
-  static const radiusMd = 16.0;
-  static const radiusLg = 24.0;
+  static const radiusSm = 10.0;
+
+  /// 입력창·버튼
+  static const radiusMd = 14.0;
+
+  /// 카드
+  static const radiusLg = 16.0;
+
+  /// 칩
+  static const radiusPill = 20.0;
 }
