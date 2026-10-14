@@ -173,7 +173,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         side: BorderSide(color: textSecondary, width: 1.5),
       ),
-      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }
