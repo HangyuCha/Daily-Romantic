@@ -2,15 +2,19 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:daily_romantic/core/location/geo.dart';
 import 'package:daily_romantic/core/utils/formatters.dart';
 import 'package:daily_romantic/features/pickup/data/mock_stores.dart';
 import 'package:daily_romantic/features/pickup/data/models.dart';
 import 'package:daily_romantic/features/pickup/data/pickup_store.dart';
 
+import 'fakes.dart';
+
 void main() {
   RouteQuery query(GiftCategory category) => RouteQuery(
-    origin: 'A',
-    destination: 'B',
+    origin: const Place(name: 'A', point: hongdae),
+    destination: const Place(name: 'B', point: sinchon),
+    route: WalkingRoute.straight(hongdae, sinchon),
     recipient: Recipient.school,
     category: category,
   );
@@ -69,5 +73,33 @@ void main() {
     expect(formatWon(0), '0원');
     expect(formatWon(9800), '9,800원');
     expect(formatWon(1234567), '1,234,567원');
+  });
+
+  test('가게는 실제 경로 위 지점에 놓이고 도보 시간이 계산된다', () {
+    final route = WalkingRoute(
+      points: const [LatLng(37.55, 126.92), LatLng(37.55, 126.94)],
+      distanceMeters: 670,
+      durationSeconds: 600,
+    );
+    final mid = route.pointAt(0.5);
+    expect(mid.latitude, closeTo(37.55, 1e-9));
+    expect(mid.longitude, closeTo(126.93, 1e-6));
+    expect(route.pointAt(0), route.points.first);
+    expect(route.pointAt(1).longitude, closeTo(126.94, 1e-9));
+    expect(route.minutesTo(0.5), 5); // 335m ÷ 67m/분
+
+    final stores = storesOnRoute(
+      RouteQuery(
+        origin: const Place(name: 'A', point: hongdae),
+        destination: const Place(name: 'B', point: sinchon),
+        route: route,
+        recipient: Recipient.school,
+        category: GiftCategory.all,
+      ),
+    );
+    final mori = stores.firstWhere((s) => s.store.id == 'mori');
+    expect(mori.point.longitude, closeTo(126.92 + 0.02 * 0.3, 1e-6));
+    // 201m ÷ 67m/분 ≈ 3분 (소수점 오차로 올림될 수 있음)
+    expect(mori.walkMinutes, inInclusiveRange(3, 4));
   });
 }

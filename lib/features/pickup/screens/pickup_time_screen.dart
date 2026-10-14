@@ -21,7 +21,17 @@ class PickupTimeScreen extends StatefulWidget {
 }
 
 class _PickupTimeScreenState extends State<PickupTimeScreen> {
-  var _minutes = PickupTimeScreen.minuteOptions.first;
+  // 가게 도착 시간과 준비 시간을 둘 다 넘기는 가장 빠른 시간을 기본으로 고른다.
+  late var _minutes = PickupTimeScreen.minuteOptions.firstWhere(
+    (m) => m >= _earliestMinutes,
+    orElse: () => PickupTimeScreen.minuteOptions.last,
+  );
+
+  int get _earliestMinutes {
+    final cart = widget.cart;
+    final walk = cart.walkMinutes ?? 0;
+    return walk > cart.store.prepMinutes ? walk : cart.store.prepMinutes;
+  }
 
   void _goToPayment() {
     Navigator.of(context).push(
@@ -38,7 +48,18 @@ class _PickupTimeScreenState extends State<PickupTimeScreen> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final readyAt = DateTime.now().add(Duration(minutes: _minutes));
-    final tooTight = _minutes < cart.store.prepMinutes;
+    final walk = cart.walkMinutes;
+    final tooTight = _minutes < _earliestMinutes;
+    final String hint;
+    if (walk != null && _minutes < walk) {
+      hint = '가게까지 도보 약 $walk분이라 조금 늦게 도착해요.';
+    } else if (_minutes < cart.store.prepMinutes) {
+      hint = '가게 평균 준비 시간(${cart.store.prepMinutes}분)보다 짧아 조금 기다릴 수 있어요.';
+    } else {
+      hint =
+          '${walk == null ? '' : '가게까지 도보 약 $walk분 · '}'
+          '${formatTime(readyAt)}에 픽업할 수 있어요.';
+    }
 
     return Scaffold(
       body: PageScaffold(
@@ -58,9 +79,7 @@ class _PickupTimeScreenState extends State<PickupTimeScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            tooTight
-                ? '가게 평균 준비 시간(${cart.store.prepMinutes}분)보다 짧아 조금 기다릴 수 있어요.'
-                : '${formatTime(readyAt)}에 픽업할 수 있어요.',
+            hint,
             style: theme.textTheme.bodySmall?.copyWith(
               color: tooTight ? scheme.primary : scheme.onSurfaceVariant,
             ),

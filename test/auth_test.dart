@@ -6,6 +6,8 @@ import 'package:daily_romantic/features/auth/data/auth_repository.dart';
 import 'package:daily_romantic/features/auth/data/demo_auth_repository.dart';
 import 'package:daily_romantic/features/auth/widgets/auth_validators.dart';
 
+import 'fakes.dart';
+
 void main() {
   group('입력 검증', () {
     test('이메일', () {
@@ -75,7 +77,10 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      DailyRomanticApp(authRepository: DemoAuthRepository()),
+      DailyRomanticApp(
+        authRepository: DemoAuthRepository(),
+        mapServices: fakeMapServices(),
+      ),
     );
     expect(find.text('로그인'), findsOneWidget);
 
@@ -130,7 +135,10 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      DailyRomanticApp(authRepository: DemoAuthRepository()),
+      DailyRomanticApp(
+        authRepository: DemoAuthRepository(),
+        mapServices: fakeMapServices(),
+      ),
     );
     await tester.tap(find.text('카카오로 시작하기'));
     await tester.pumpAndSettle();
