@@ -85,8 +85,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     // S5
-    expect(find.text('픽업 준비 중이에요'), findsOneWidget);
+    expect(find.text('가게에서 준비 중이에요'), findsOneWidget);
     expect(find.textContaining(RegExp(r'^[A-Z]-\d{4}$')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining('네이버페이 결제 완료'),
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
     expect(find.textContaining('네이버페이 결제 완료'), findsOneWidget);
     await tester.pumpAndSettle();
     await tapText(tester, '처음으로');
@@ -256,5 +261,31 @@ void main() {
     // 배너를 누르면 픽업 코드 화면
     await tapText(tester, '가게에서 준비 중이에요');
     expect(find.text('매장에서 이 코드를 보여주세요'), findsOneWidget);
+
+    // 시연용으로 가게 상태 넘기기
+    await tapText(tester, "시연용 · 가게 상태를 '포장 완료'(으)로");
+    expect(find.text('포장이 끝났어요'), findsOneWidget);
+    await tapText(tester, "시연용 · 가게 상태를 '픽업 가능'(으)로");
+    expect(find.text('지금 픽업할 수 있어요'), findsOneWidget);
+
+    // 픽업 완료 → 홈 알림이 사라지고 주문 탭에 완료로 표시
+    await tapText(tester, '픽업했어요');
+    expect(find.text('픽업 완료!'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text(code), findsNothing);
+    await tapText(tester, '주문');
+    expect(find.text('픽업 완료'), findsOneWidget);
+  });
+
+  testWidgets('주문 전에는 홈에 주문 알림이 없다', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(signedInApp());
+    await tester.pumpAndSettle();
+    expect(find.text('픽업 코드'), findsNothing);
+    // 위로 끌어내려도 나오지 않는다
+    await tester.drag(find.text('어디로 가세요?'), const Offset(0, 300));
+    await tester.pumpAndSettle();
+    expect(find.text('픽업 코드'), findsNothing);
   });
 }

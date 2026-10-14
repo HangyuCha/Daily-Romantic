@@ -39,11 +39,45 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final active = PickupScope.of(context).activeOrders(now);
-    if (active.isEmpty) return const SizedBox.shrink();
+    final pickup = PickupScope.of(context);
+    final active = pickup.activeOrders(now);
 
-    final order = active.first;
-    final stage = order.stageAt(now);
+    // 주문이 생기면 위에서 내려오고, 픽업을 마치면 접혀서 사라진다.
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        axisAlignment: -1,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: active.isEmpty
+          ? const SizedBox(width: double.infinity, key: ValueKey('none'))
+          : _Banner(
+              key: ValueKey(active.first.code),
+              order: active.first,
+              stage: pickup.stageOf(active.first, now),
+              moreCount: active.length - 1,
+            ),
+    );
+  }
+}
+
+class _Banner extends StatelessWidget {
+  const _Banner({
+    super.key,
+    required this.order,
+    required this.stage,
+    required this.moreCount,
+  });
+
+  final PickupOrder order;
+  final PickupStage stage;
+  final int moreCount;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = theme.textTheme.bodySmall?.copyWith(
@@ -51,9 +85,16 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
     );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        0,
+        AppSpacing.screenPadding,
+        AppSpacing.sm,
+      ),
       child: Material(
         color: scheme.primaryContainer,
+        elevation: 3,
+        shadowColor: scheme.primary.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -77,7 +118,7 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _headline(stage),
+                            stage.headline,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: scheme.primary,
@@ -87,7 +128,7 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
                           Text(
                             '${order.store.name} · '
                             '${formatTime(order.pickupAt)} 픽업'
-                            '${active.length > 1 ? ' · 외 ${active.length - 1}건' : ''}',
+                            '${moreCount > 0 ? ' · 외 $moreCount건' : ''}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: muted,
@@ -108,6 +149,10 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
                         ),
                       ],
                     ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -119,12 +164,6 @@ class _ActiveOrderBannerState extends State<ActiveOrderBanner> {
       ),
     );
   }
-
-  static String _headline(PickupStage stage) => switch (stage) {
-    PickupStage.preparing => '가게에서 준비 중이에요',
-    PickupStage.packed => '포장이 끝났어요',
-    PickupStage.ready => '지금 픽업할 수 있어요',
-  };
 }
 
 /// 가게 준비 → 포장 완료 → 픽업 가능 3단계 표시

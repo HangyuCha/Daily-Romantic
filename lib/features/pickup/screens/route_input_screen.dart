@@ -178,7 +178,7 @@ class _RouteInputScreenState extends State<RouteInputScreen> {
     );
     return Scaffold(
       body: PageScaffold(
-        top: const ActiveOrderBanner(),
+        pinned: const ActiveOrderBanner(),
         title: '어디로 가세요?',
         subtitle: '목적지로 가는 길목에서 15분 안에 들를 수 있는 가게를 찾아드려요.',
         bottom: FilledButton(
