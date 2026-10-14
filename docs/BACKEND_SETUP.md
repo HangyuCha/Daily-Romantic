@@ -7,6 +7,9 @@
 | DB · 로그인 · 파일 저장 | [Supabase](https://supabase.com) Free | DB 500MB, 파일 1GB, 월 활성 사용자 5만 명, 프로젝트 2개 |
 | 카카오 로그인 | [Kakao Developers](https://developers.kakao.com) | 무료 |
 | 네이버 로그인 | [NAVER Developers](https://developers.naver.com) | 무료 |
+| 지도 | [OpenStreetMap](https://www.openstreetmap.org) 타일 | 무료, 가입·키 없음 |
+| 장소 검색 | [Nominatim](https://nominatim.org) | 무료, 가입·키 없음 (초당 1회) |
+| 도보 길찾기 | [OSRM 공개 서버](https://routing.openstreetmap.de) | 무료, 가입·키 없음 |
 
 > Supabase 무료 프로젝트는 **7일 동안 요청이 없으면 일시정지**됩니다. 데이터는 남아 있고, 대시보드에서 Restore를 누르면 다시 켜집니다. 발표 전날 꼭 확인하세요.
 
@@ -91,6 +94,23 @@ flutter run --dart-define-from-file=env.json
 서버 없이 앱 안에서만 회원가입·로그인이 동작하고(카카오·네이버 버튼도 바로 로그인 처리), 앱을 끄면 가입 정보가 사라집니다. UI 작업이나 발표 시연용입니다.
 
 ---
+
+## 지도·위치
+
+따로 설정할 것이 없습니다. 위치 권한 문구는 iOS `Info.plist`, Android `AndroidManifest.xml`에 들어 있습니다.
+
+- **현재 위치**: 폰 GPS (`geolocator`). 처음 실행할 때 위치 권한을 물어봅니다.
+- **목적지 검색**: 장소 이름으로 검색합니다. 결과가 여러 개면 고르는 창이 뜹니다.
+- **경로**: 실제 도보 경로를 지도에 점선으로 그립니다. 길찾기 서버에 연결하지 못하면 직선(점 무늬)으로 대신 그립니다.
+- **가게 위치**: 아직 실제 가게 데이터가 없어서, 임시 가게 4곳을 사용자의 실제 경로 위에 배치합니다.
+
+**시뮬레이터에서 위치 바꾸기** (iOS): Simulator 메뉴 → Features → Location → Custom Location, 또는
+
+```bash
+xcrun simctl location booted set 37.5572,126.9245
+```
+
+> 모두 공개 무료 서버라 수업·시연 정도의 사용량만 허용됩니다. 실제 출시할 때는 네이버 지도·카카오맵 API(무료 사용량 있음, 키 필요)로 바꾸는 것을 권장합니다. 코드에서는 `lib/core/location/`의 서비스 파일만 바꾸면 됩니다.
 
 ## 배포는 어떻게 하나요?
 
