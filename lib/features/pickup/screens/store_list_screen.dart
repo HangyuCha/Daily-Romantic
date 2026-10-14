@@ -16,21 +16,47 @@ class StoreListScreen extends StatelessWidget {
 
   final RouteQuery query;
 
+  void _open(BuildContext context, StoreOnRoute s) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StoreMenuScreen(
+          store: s.store,
+          storePoint: s.point,
+          walkMinutes: s.walkMinutes,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final stores = searchStores(query);
+    final stores = storesOnRoute(query);
     final pickup = PickupScope.of(context);
     final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
     return Scaffold(
       body: PageScaffold(
         backLabel: AppStrings.back,
         title: '경로 위 픽업 가능 가게',
         subtitle:
-            '${query.origin} → ${query.destination}\n'
-            '우회 15분 이내 · ${stores.length}곳',
+            '${query.origin.name} → ${query.destination.name}\n'
+            '도보 ${query.route.durationMinutes}분 · 우회 15분 이내 · ${stores.length}곳',
         children: [
-          RouteMap(stores: stores),
+          RouteMap(
+            query: query,
+            stores: stores,
+            onStoreTap: (s) => _open(context, s),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            query.route.isEstimated
+                ? '길찾기 서버에 연결하지 못해 직선 거리로 표시했어요.'
+                : '가게 위치는 시연용으로 경로 위에 배치했어요.',
+            style: muted,
+          ),
           const SizedBox(height: AppSpacing.md),
           if (stores.isEmpty)
             Padding(
@@ -43,17 +69,14 @@ class StoreListScreen extends StatelessWidget {
                 ),
               ),
             ),
-          for (final (i, store) in stores.indexed) ...[
+          for (final (i, s) in stores.indexed) ...[
             StoreCard(
-              store: store,
+              store: s.store,
               index: i + 1,
-              isFavorite: pickup.isFavorite(store),
-              onFavoriteTap: () => pickup.toggleFavorite(store),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => StoreMenuScreen(store: store),
-                ),
-              ),
+              walkMinutes: s.walkMinutes,
+              isFavorite: pickup.isFavorite(s.store),
+              onFavoriteTap: () => pickup.toggleFavorite(s.store),
+              onTap: () => _open(context, s),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],

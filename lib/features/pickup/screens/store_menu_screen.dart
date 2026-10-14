@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/location/geo.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/emoji_thumb.dart';
@@ -11,16 +12,29 @@ import 'pickup_time_screen.dart';
 /// S3. 가게 상세 — 메뉴 선택 및 장바구니.
 /// 이 화면을 벗어나면(가게 목록으로 돌아가면) 장바구니는 버려진다.
 class StoreMenuScreen extends StatefulWidget {
-  const StoreMenuScreen({super.key, required this.store});
+  const StoreMenuScreen({
+    super.key,
+    required this.store,
+    this.storePoint,
+    this.walkMinutes,
+  });
 
   final Store store;
+
+  /// S2 지도에서 넘어온 가게 위치와 도보 시간 (찜 탭에서 열면 null)
+  final LatLng? storePoint;
+  final int? walkMinutes;
 
   @override
   State<StoreMenuScreen> createState() => _StoreMenuScreenState();
 }
 
 class _StoreMenuScreenState extends State<StoreMenuScreen> {
-  late final _cart = Cart(widget.store);
+  late final _cart = Cart(
+    widget.store,
+    storePoint: widget.storePoint,
+    walkMinutes: widget.walkMinutes,
+  );
 
   Future<void> _editMessage() async {
     final message = await showModalBottomSheet<String>(
@@ -42,7 +56,9 @@ class _StoreMenuScreenState extends State<StoreMenuScreen> {
       body: PageScaffold(
         backLabel: '← 가게 목록',
         title: store.name,
-        subtitle: '+${store.detourMinutes}분 우회 · 평균 준비 ${store.prepMinutes}분',
+        subtitle:
+            '${widget.walkMinutes == null ? '' : '도보 ${widget.walkMinutes}분 · '}'
+            '+${store.detourMinutes}분 우회 · 평균 준비 ${store.prepMinutes}분',
         bottom: FilledButton(
           onPressed: _cart.isEmpty
               ? null

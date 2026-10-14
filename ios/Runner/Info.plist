@@ -6,6 +6,8 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>현재 위치에서 목적지로 가는 길의 가게를 찾기 위해 위치 정보를 사용해요.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

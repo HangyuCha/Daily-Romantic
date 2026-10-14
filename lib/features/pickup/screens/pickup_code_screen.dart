@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/app_header.dart';
+import '../../../shared/widgets/app_map.dart';
 import '../../../shared/widgets/soft_button.dart';
 import '../data/models.dart';
 
@@ -137,6 +139,28 @@ class _PickupCodeScreenState extends State<PickupCodeScreen>
                         );
                       },
                     ),
+                    if (order.storePoint != null) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      AppMap(
+                        height: 160,
+                        points: [order.storePoint!],
+                        layers: [
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: order.storePoint!,
+                                width: 36,
+                                height: 36,
+                                child: MapPin(
+                                  label: order.store.emoji,
+                                  size: 36,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       '픽업 예정 ${formatTime(order.pickupAt)} · '

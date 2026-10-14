@@ -69,6 +69,16 @@ const mockStores = <Store>[
   ),
 ];
 
+/// 카테고리로 거르고 우회 시간이 짧은 순으로 정렬한 뒤, 실제 경로 위에 배치한다.
+List<StoreOnRoute> storesOnRoute(RouteQuery query) => [
+  for (final store in searchStores(query))
+    StoreOnRoute(
+      store: store,
+      point: query.route.pointAt(store.routePosition),
+      walkMinutes: query.route.minutesTo(store.routePosition),
+    ),
+];
+
 /// 카테고리로 거르고 우회 시간이 짧은 순으로 정렬한다.
 /// '전체'면 모든 가게를 보여준다.
 List<Store> searchStores(RouteQuery query) {

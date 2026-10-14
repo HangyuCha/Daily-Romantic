@@ -13,6 +13,7 @@ class StoreCard extends StatelessWidget {
     required this.onTap,
     required this.onFavoriteTap,
     this.index,
+    this.walkMinutes,
   });
 
   final Store store;
@@ -22,6 +23,9 @@ class StoreCard extends StatelessWidget {
 
   /// 지도 핀 번호와 맞추기 위한 순번 (1부터)
   final int? index;
+
+  /// 실제 경로 기준 도보 시간. 없으면 가게 기본값을 쓴다.
+  final int? walkMinutes;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +53,7 @@ class StoreCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '도보 ${store.walkMinutes}분 · +${store.detourMinutes}분 우회',
+                      '도보 ${walkMinutes ?? store.walkMinutes}분 · +${store.detourMinutes}분 우회',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),

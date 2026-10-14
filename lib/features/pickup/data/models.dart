@@ -1,3 +1,5 @@
+import '../../../core/location/geo.dart';
+
 /// 받는 사람 유형 (S1). 추후 AI 추천의 관계 변수로 사용.
 enum Recipient {
   school('🎓 학교 사람'),
@@ -64,7 +66,8 @@ class Store {
   /// 평균 준비 시간
   final int prepMinutes;
 
-  /// 지도 경로 위 위치 (0 = 출발지, 1 = 목적지)
+  /// 경로 위 위치 (0 = 출발지, 1 = 목적지).
+  /// 실제 가게 데이터가 생기기 전까지 사용자의 실제 경로 위 이 지점에 가게를 놓는다.
   final double routePosition;
   final List<MenuItem> menu;
 }
@@ -74,21 +77,44 @@ class RouteQuery {
   const RouteQuery({
     required this.origin,
     required this.destination,
+    required this.route,
     required this.recipient,
     required this.category,
   });
 
-  final String origin;
-  final String destination;
+  final Place origin;
+  final Place destination;
+  final WalkingRoute route;
   final Recipient recipient;
   final GiftCategory category;
 }
 
-/// 장바구니 (S3 → S4). 한 가게에서만 담을 수 있다.
-class Cart {
-  Cart(this.store);
+/// 경로 위에 배치된 가게 (S2)
+class StoreOnRoute {
+  const StoreOnRoute({
+    required this.store,
+    required this.point,
+    required this.walkMinutes,
+  });
 
   final Store store;
+  final LatLng point;
+
+  /// 출발지에서 가게까지 걷는 시간
+  final int walkMinutes;
+}
+
+/// 장바구니 (S3 → S4). 한 가게에서만 담을 수 있다.
+class Cart {
+  Cart(this.store, {this.storePoint, this.walkMinutes});
+
+  final Store store;
+
+  /// 지도에 표시할 가게 위치 (경로 검색을 거치지 않았으면 null)
+  final LatLng? storePoint;
+
+  /// 출발지에서 가게까지 걷는 시간 (모르면 null)
+  final int? walkMinutes;
   final Map<MenuItem, int> quantities = {};
   String message = '';
 
@@ -143,6 +169,7 @@ class PickupOrder {
     required this.createdAt,
     required this.pickupAt,
     required this.paymentMethod,
+    this.storePoint,
   });
 
   /// 픽업 코드. 형식: 알파벳 1자리 + 하이픈 + 숫자 4자리 (예: A-2741)
@@ -155,4 +182,5 @@ class PickupOrder {
   final DateTime createdAt;
   final DateTime pickupAt;
   final PaymentMethod paymentMethod;
+  final LatLng? storePoint;
 }

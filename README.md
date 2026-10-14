@@ -18,6 +18,8 @@ Flutter로 만든 iOS / Android 앱입니다. 코드 하나로 두 플랫폼을 
 
 - 앱: Flutter (iOS + Android)
 - DB · 로그인: Supabase (무료 플랜) — 이메일 / 카카오 / 네이버 로그인
+- 지도·위치: OpenStreetMap 지도 + GPS + 도보 길찾기 (무료, 키 없음)
+- 결제: 시연용 화면 (실제 결제 없음)
 - 설정 방법: [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md)
 
 ## 실행
@@ -43,6 +45,7 @@ lib/
 │   │   └── env.dart          # Supabase 주소·키 (env.json에서 주입)
 │   ├── constants/
 │   │   └── app_strings.dart  # 여러 화면에서 쓰는 문구
+│   ├── location/             # GPS, 장소 검색, 도보 길찾기
 │   ├── utils/formatters.dart # 금액·시간 표시 형식
 │   └── theme/
 │       ├── app_colors.dart   # 브랜드 컬러 (색 변경은 여기서)
@@ -75,10 +78,11 @@ docs/                         # 설정 가이드
 | S2 가게 목록 | `features/pickup/screens/store_list_screen.dart` |
 | S3 메뉴 · 장바구니 | `features/pickup/screens/store_menu_screen.dart` |
 | S4 픽업 시간 | `features/pickup/screens/pickup_time_screen.dart` |
+| 결제 (시연용) | `features/pickup/screens/payment_screen.dart` |
 | S5 픽업 코드 | `features/pickup/screens/pickup_code_screen.dart` |
 | 주문 / 찜 / MY 탭 | `features/orders`, `features/favorites`, `features/profile` |
 
-가게·메뉴는 아직 `features/pickup/data/mock_stores.dart`의 임시 데이터입니다.
+가게·메뉴는 아직 `features/pickup/data/mock_stores.dart`의 임시 데이터이고, 지도에서는 실제 도보 경로 위에 배치됩니다.
 
 ## 팀 규칙 (제안)
 

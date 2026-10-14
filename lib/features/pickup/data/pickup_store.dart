@@ -40,6 +40,7 @@ class PickupStore extends ChangeNotifier {
       createdAt: now,
       pickupAt: now.add(Duration(minutes: pickupInMinutes)),
       paymentMethod: paymentMethod,
+      storePoint: cart.storePoint,
     );
     _orders.add(order);
     notifyListeners();
