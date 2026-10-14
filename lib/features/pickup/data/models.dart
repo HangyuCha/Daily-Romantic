@@ -4,10 +4,22 @@ import '../../../core/location/geo.dart';
 enum Recipient {
   school('🎓 학교 사람'),
   coworker('💼 회사 동료'),
-  loved('💌 지인·연인');
+  loved('💌 지인·연인'),
+  other('✏️ 기타');
 
   const Recipient(this.label);
   final String label;
+}
+
+/// 언제까지 픽업해야 하는지 (S1). 서비스 특성상 최대 30분.
+enum PickupWindow {
+  min15(15, '15분 이내', '지금 바로 급할 때'),
+  min30(30, '30분 이내', '케이크·소품까지 넉넉히');
+
+  const PickupWindow(this.minutes, this.label, this.description);
+  final int minutes;
+  final String label;
+  final String description;
 }
 
 /// 선물 카테고리 (S1 필터).
@@ -80,6 +92,8 @@ class RouteQuery {
     required this.route,
     required this.recipient,
     required this.category,
+    this.window = PickupWindow.min15,
+    this.recipientNote = '',
   });
 
   final Place origin;
@@ -87,6 +101,10 @@ class RouteQuery {
   final WalkingRoute route;
   final Recipient recipient;
   final GiftCategory category;
+  final PickupWindow window;
+
+  /// 받는 사람이 '기타'일 때 직접 입력한 내용 (예: 부모님)
+  final String recipientNote;
 }
 
 /// 경로 위에 배치된 가게 (S2)
@@ -106,7 +124,12 @@ class StoreOnRoute {
 
 /// 장바구니 (S3 → S4). 한 가게에서만 담을 수 있다.
 class Cart {
-  Cart(this.store, {this.storePoint, this.walkMinutes});
+  Cart(
+    this.store, {
+    this.storePoint,
+    this.walkMinutes,
+    this.window = PickupWindow.min30,
+  });
 
   final Store store;
 
@@ -115,6 +138,9 @@ class Cart {
 
   /// 출발지에서 가게까지 걷는 시간 (모르면 null)
   final int? walkMinutes;
+
+  /// S1에서 고른 픽업 가능 시간
+  final PickupWindow window;
   final Map<MenuItem, int> quantities = {};
   String message = '';
 
@@ -183,4 +209,25 @@ class PickupOrder {
   final DateTime pickupAt;
   final PaymentMethod paymentMethod;
   final LatLng? storePoint;
+
+  /// 픽업 시각이 지나고 이 시간까지는 '진행 중'으로 본다.
+  static const keepActiveAfterPickup = Duration(minutes: 30);
+
+  /// 주문부터 픽업 시각까지 지난 비율 (0~1)
+  double progressAt(DateTime now) {
+    final total = pickupAt.difference(createdAt).inMilliseconds;
+    if (total <= 0) return 1;
+    return (now.difference(createdAt).inMilliseconds / total).clamp(0.0, 1.0);
+  }
+
+  /// 가게 쪽 상태 연동 전까지는 시간 흐름으로 준비 단계를 추정한다.
+  PickupStage stageAt(DateTime now) {
+    final p = progressAt(now);
+    if (p >= 1) return PickupStage.ready;
+    if (p >= 0.5) return PickupStage.packed;
+    return PickupStage.preparing;
+  }
+
+  bool isActiveAt(DateTime now) =>
+      now.isBefore(pickupAt.add(keepActiveAfterPickup));
 }

@@ -15,6 +15,12 @@ class PickupStore extends ChangeNotifier {
   /// 최신 주문이 앞에 온다.
   List<PickupOrder> get orders => List.unmodifiable(_orders.reversed);
 
+  /// 아직 픽업 전이거나 막 픽업 시각이 지난 주문 (최신순)
+  List<PickupOrder> activeOrders([DateTime? now]) {
+    final t = now ?? DateTime.now();
+    return orders.where((o) => o.isActiveAt(t)).toList();
+  }
+
   bool isFavorite(Store store) => _favoriteStoreIds.contains(store.id);
 
   Set<String> get favoriteStoreIds => Set.unmodifiable(_favoriteStoreIds);

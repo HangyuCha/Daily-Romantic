@@ -17,6 +17,7 @@ class StoreMenuScreen extends StatefulWidget {
     required this.store,
     this.storePoint,
     this.walkMinutes,
+    this.window = PickupWindow.min30,
   });
 
   final Store store;
@@ -24,6 +25,9 @@ class StoreMenuScreen extends StatefulWidget {
   /// S2 지도에서 넘어온 가게 위치와 도보 시간 (찜 탭에서 열면 null)
   final LatLng? storePoint;
   final int? walkMinutes;
+
+  /// S1에서 고른 픽업 가능 시간 (찜 탭에서 열면 30분)
+  final PickupWindow window;
 
   @override
   State<StoreMenuScreen> createState() => _StoreMenuScreenState();
@@ -34,6 +38,7 @@ class _StoreMenuScreenState extends State<StoreMenuScreen> {
     widget.store,
     storePoint: widget.storePoint,
     walkMinutes: widget.walkMinutes,
+    window: widget.window,
   );
 
   Future<void> _editMessage() async {

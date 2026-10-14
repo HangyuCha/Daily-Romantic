@@ -70,14 +70,22 @@ const mockStores = <Store>[
 ];
 
 /// 카테고리로 거르고 우회 시간이 짧은 순으로 정렬한 뒤, 실제 경로 위에 배치한다.
+/// 가게까지 걸어가는 시간과 준비 시간이 모두 [RouteQuery.window] 안인 가게만 남긴다.
 List<StoreOnRoute> storesOnRoute(RouteQuery query) => [
   for (final store in searchStores(query))
-    StoreOnRoute(
-      store: store,
-      point: query.route.pointAt(store.routePosition),
-      walkMinutes: query.route.minutesTo(store.routePosition),
-    ),
+    if (_fits(query, store))
+      StoreOnRoute(
+        store: store,
+        point: query.route.pointAt(store.routePosition),
+        walkMinutes: query.route.minutesTo(store.routePosition),
+      ),
 ];
+
+bool _fits(RouteQuery query, Store store) {
+  final walk = query.route.minutesTo(store.routePosition);
+  final ready = walk > store.prepMinutes ? walk : store.prepMinutes;
+  return ready <= query.window.minutes;
+}
 
 /// 카테고리로 거르고 우회 시간이 짧은 순으로 정렬한다.
 /// '전체'면 모든 가게를 보여준다.

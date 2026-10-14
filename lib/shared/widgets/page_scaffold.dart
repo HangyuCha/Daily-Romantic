@@ -13,6 +13,7 @@ class PageScaffold extends StatelessWidget {
     this.onBack,
     required this.children,
     this.bottom,
+    this.top,
   });
 
   final String title;
@@ -25,6 +26,9 @@ class PageScaffold extends StatelessWidget {
 
   /// 화면 하단에 고정되는 버튼 영역
   final Widget? bottom;
+
+  /// 제목 위에 보여줄 위젯 (예: 진행 중 주문 상태)
+  final Widget? top;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +61,7 @@ class PageScaffold extends StatelessWidget {
                       child: Text(backLabel!),
                     ),
                   ),
+                ?top,
                 const SizedBox(height: AppSpacing.xs),
                 Text(title, style: theme.textTheme.headlineSmall),
                 if (subtitle != null) ...[
