@@ -141,24 +141,32 @@ class _PickupCodeScreenState extends State<PickupCodeScreen>
                     ),
                     if (order.storePoint != null) ...[
                       const SizedBox(height: AppSpacing.lg),
-                      AppMap(
-                        height: 160,
-                        points: [order.storePoint!],
-                        layers: [
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: order.storePoint!,
-                                width: 36,
-                                height: 36,
-                                child: MapPin(
-                                  label: order.store.emoji,
-                                  size: 36,
-                                ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                        child: SizedBox(
+                          height: 160,
+                          child: AppMap(
+                            interactive: false,
+                            points: [order.storePoint!],
+                            layers: [
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: order.storePoint!,
+                                    width: 36,
+                                    height: 36,
+                                    child: MapPin(
+                                      label: order.store.emoji,
+                                      size: 36,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.lg),

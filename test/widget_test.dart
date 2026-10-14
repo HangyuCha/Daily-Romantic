@@ -82,6 +82,31 @@ void main() {
     expect(find.text('모리 베이커리'), findsOneWidget);
   });
 
+  testWidgets('지도를 크게 보면 길 안내가 나오고, 가게를 고르면 메뉴로 간다', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(signedInApp());
+    await tester.pumpAndSettle();
+    await tapText(tester, '가는 길 가게 찾기');
+
+    await tapText(tester, '크게 보기 · 길 안내');
+    expect(find.text('길 안내'), findsOneWidget);
+    expect(find.text('출발해서 양화로 따라 1.3km 이동'), findsOneWidget);
+    expect(find.text('좌회전 후 신촌로9길 따라 310m'), findsOneWidget);
+
+    // 확대 버튼이 동작해도 오류가 없어야 한다
+    await tester.tap(find.byTooltip('확대'));
+    await tester.pump();
+
+    // 길 안내 시트를 끌어올린 뒤 경로 위 가게에서 고르기
+    await tester.drag(find.text('길 안내'), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tapText(tester, '모리 베이커리');
+    expect(find.text('장바구니 비었어요'), findsOneWidget);
+  });
+
   testWidgets('카테고리를 고르면 해당 가게만 보인다', (tester) async {
     await tester.pumpWidget(signedInApp());
     await tester.pumpAndSettle();

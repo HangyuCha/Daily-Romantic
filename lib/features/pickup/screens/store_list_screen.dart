@@ -8,6 +8,7 @@ import '../data/models.dart';
 import '../data/pickup_store.dart';
 import '../widgets/route_map.dart';
 import '../widgets/store_card.dart';
+import 'route_map_screen.dart';
 import 'store_menu_screen.dart';
 
 /// S2. 경로 위 픽업 가능 가게 목록
@@ -28,6 +29,19 @@ class StoreListScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _openFullMap(
+    BuildContext context,
+    List<StoreOnRoute> stores,
+  ) async {
+    // 하단 탭을 가리도록 최상위 Navigator에 띄운다.
+    final picked = await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<StoreOnRoute>(
+        builder: (_) => RouteMapScreen(query: query, stores: stores),
+      ),
+    );
+    if (picked != null && context.mounted) _open(context, picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final stores = storesOnRoute(query);
@@ -45,10 +59,10 @@ class StoreListScreen extends StatelessWidget {
             '${query.origin.name} → ${query.destination.name}\n'
             '도보 ${query.route.durationMinutes}분 · 우회 15분 이내 · ${stores.length}곳',
         children: [
-          RouteMap(
+          RoutePreviewMap(
             query: query,
             stores: stores,
-            onStoreTap: (s) => _open(context, s),
+            onOpenFullMap: () => _openFullMap(context, stores),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(

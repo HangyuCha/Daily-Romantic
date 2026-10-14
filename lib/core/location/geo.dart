@@ -13,18 +13,90 @@ class Place {
   final String? address;
 }
 
+/// 길 안내 한 단계 (예: 좌회전해서 신촌로9길 따라 180m)
+class RouteStep {
+  const RouteStep({
+    required this.kind,
+    required this.roadName,
+    required this.distanceMeters,
+    required this.location,
+  });
+
+  final StepKind kind;
+
+  /// 이 단계에서 따라가는 길 이름. 이름 없는 골목이면 빈 문자열
+  final String roadName;
+
+  /// 이 단계에서 걷는 거리
+  final double distanceMeters;
+
+  /// 방향을 바꾸는 지점
+  final LatLng location;
+
+  String get instruction {
+    final along = roadName.isEmpty ? '' : '$roadName 따라 ';
+    return switch (kind) {
+      StepKind.depart => '출발해서 $along${formatDistance(distanceMeters)} 이동',
+      StepKind.arrive => '목적지 도착',
+      StepKind.straight => '$along${formatDistance(distanceMeters)} 직진',
+      _ => '${kind.label} 후 $along${formatDistance(distanceMeters)}',
+    };
+  }
+}
+
+enum StepKind {
+  depart('출발'),
+  straight('직진'),
+  left('좌회전'),
+  right('우회전'),
+  slightLeft('왼쪽 방향'),
+  slightRight('오른쪽 방향'),
+  sharpLeft('왼쪽으로 크게 꺾기'),
+  sharpRight('오른쪽으로 크게 꺾기'),
+  uturn('유턴'),
+  arrive('도착');
+
+  const StepKind(this.label);
+  final String label;
+
+  /// OSRM의 maneuver type/modifier → 방향
+  static StepKind fromOsrm(String type, String? modifier) {
+    if (type == 'depart') return depart;
+    if (type == 'arrive') return arrive;
+    return switch (modifier) {
+      'left' => left,
+      'right' => right,
+      'slight left' => slightLeft,
+      'slight right' => slightRight,
+      'sharp left' => sharpLeft,
+      'sharp right' => sharpRight,
+      'uturn' => uturn,
+      _ => straight,
+    };
+  }
+}
+
+/// 350 → "350m", 1234 → "1.2km"
+String formatDistance(double meters) => meters < 1000
+    ? '${(meters / 10).round() * 10}m'
+    : '${(meters / 1000).toStringAsFixed(1)}km';
+
 /// 도보 경로
 class WalkingRoute {
   WalkingRoute({
     required this.points,
     required this.distanceMeters,
     required this.durationSeconds,
+    this.steps = const [],
     this.isEstimated = false,
   }) : assert(points.length >= 2);
 
   final List<LatLng> points;
   final double distanceMeters;
   final double durationSeconds;
+
+  /// 길 안내 (길찾기 서버에 연결하지 못했으면 비어 있음)
+  final List<RouteStep> steps;
 
   /// 길찾기 서버에 연결하지 못해 직선으로 대신 그린 경로인지
   final bool isEstimated;

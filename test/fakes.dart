@@ -55,5 +55,25 @@ class FakeRoutingService implements RoutingService {
         points: [from, LatLng(from.latitude, to.longitude), to],
         distanceMeters: 1608, // 67m/분 기준 24분
         durationSeconds: 24 * 60,
+        steps: [
+          RouteStep(
+            kind: StepKind.depart,
+            roadName: '양화로',
+            distanceMeters: 1300,
+            location: from,
+          ),
+          RouteStep(
+            kind: StepKind.left,
+            roadName: '신촌로9길',
+            distanceMeters: 308,
+            location: LatLng(from.latitude, to.longitude),
+          ),
+          RouteStep(
+            kind: StepKind.arrive,
+            roadName: '',
+            distanceMeters: 0,
+            location: to,
+          ),
+        ],
       );
 }
