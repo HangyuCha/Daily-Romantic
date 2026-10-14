@@ -1,17 +1,53 @@
-# daily_romantic
+# 데일리 로맨틱 (Daily Romantic)
 
-Daily Romantic
+Flutter로 만든 iOS / Android 앱입니다. 코드 하나로 두 플랫폼을 함께 빌드합니다.
 
-## Getting Started
+## 개발 환경 준비
 
-This project is a starting point for a Flutter application.
+1. [Flutter SDK](https://docs.flutter.dev/get-started/install) 설치 (3.41 이상)
+2. iOS 빌드 (Mac만 가능)
+   - App Store에서 Xcode 설치
+   - `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
+   - `sudo xcodebuild -runFirstLaunch`
+   - CocoaPods 설치: `brew install cocoapods`
+3. Android 빌드: Android Studio 설치 후 에뮬레이터 생성
+4. `flutter doctor` 로 빠진 항목이 없는지 확인
 
-A few resources to get you started if this is your first Flutter project:
+## 실행
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+flutter run            # 연결된 기기/시뮬레이터에서 실행
+flutter test           # 테스트
+flutter analyze        # 코드 검사
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+iOS 시뮬레이터 열기: `open -a Simulator`
+
+## 폴더 구조
+
+```
+lib/
+├── main.dart                 # 진입점
+├── app.dart                  # MaterialApp, 테마 연결
+├── core/
+│   ├── constants/
+│   │   └── app_strings.dart  # 앱 문구 모음
+│   └── theme/
+│       ├── app_colors.dart   # 브랜드 컬러 (색 변경은 여기서)
+│       ├── app_spacing.dart  # 여백·모서리 값
+│       └── app_theme.dart    # 라이트/다크 테마
+├── features/                 # 기능(화면) 단위로 폴더 분리
+│   ├── shell/main_shell.dart # 하단 탭 바
+│   ├── home/
+│   ├── calendar/
+│   └── profile/
+└── shared/widgets/           # 여러 화면에서 쓰는 공용 위젯
+```
+
+## 팀 규칙 (제안)
+
+- 새 기능은 `lib/features/<기능명>/` 폴더를 만들어 그 안에 작업 → 팀원 간 충돌 최소화
+- 색상·여백·문구는 화면에 직접 쓰지 말고 `core/`의 값을 사용
+- 화면에서는 `Theme.of(context)`로 색과 글꼴을 가져오기
+- 하단 탭 추가/변경은 `features/shell/main_shell.dart`의 `_tabs` 목록만 수정
