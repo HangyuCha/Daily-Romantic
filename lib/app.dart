@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'core/config/env.dart';
@@ -31,8 +33,23 @@ class _DailyRomanticAppState extends State<DailyRomanticApp> {
   late final _mapServices = widget.mapServices ?? MapServices.live();
   final _pickupStore = PickupStore();
 
+  late final StreamSubscription<AppUser?> _authSub;
+  late String? _userId = _auth.currentUser?.id;
+
+  @override
+  void initState() {
+    super.initState();
+    // 계정이 바뀌면(로그아웃·다른 계정 로그인) 이전 사람의 주문·찜을 지운다.
+    _authSub = _auth.authStateChanges().listen((user) {
+      if (user?.id == _userId) return;
+      _userId = user?.id;
+      _pickupStore.reset();
+    });
+  }
+
   @override
   void dispose() {
+    _authSub.cancel();
     _pickupStore.dispose();
     super.dispose();
   }

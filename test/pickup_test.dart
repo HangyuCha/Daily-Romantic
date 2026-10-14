@@ -202,13 +202,54 @@ void main() {
       );
     });
 
-    test('픽업 시각 30분 뒤까지 진행 중으로 보고, 그 뒤엔 홈에서 사라진다', () {
+    test('픽업 완료를 안 눌러도 픽업 시각 2시간 뒤엔 진행 중에서 빠진다', () {
       final pickup = created.add(const Duration(minutes: 20));
-      expect(order.isActiveAt(pickup.add(const Duration(minutes: 29))), isTrue);
       expect(
-        order.isActiveAt(pickup.add(const Duration(minutes: 31))),
+        order.isActiveAt(pickup.add(const Duration(minutes: 119))),
+        isTrue,
+      );
+      expect(
+        order.isActiveAt(pickup.add(const Duration(minutes: 121))),
         isFalse,
       );
+    });
+  });
+
+  group('주문 상태 바꾸기', () {
+    PickupOrder order(PickupStore pickup) => pickup.placeOrder(
+      Cart(mockStores.first)..setQuantity(mockStores.first.menu.first, 1),
+      pickupInMinutes: 15,
+      paymentMethod: PaymentMethod.card,
+    );
+
+    test('시연용으로 단계를 넘기면 시간과 상관없이 바뀐다', () {
+      final pickup = PickupStore();
+      final o = order(pickup);
+      expect(pickup.stageOf(o), PickupStage.preparing);
+      pickup.advanceStage(o);
+      expect(pickup.stageOf(o), PickupStage.packed);
+      pickup.advanceStage(o);
+      pickup.advanceStage(o); // 픽업 가능 다음은 없음
+      expect(pickup.stageOf(o), PickupStage.ready);
+    });
+
+    test('픽업 완료하면 진행 중 목록에서 빠지고 주문 내역에는 남는다', () {
+      final pickup = PickupStore();
+      final o = order(pickup);
+      expect(pickup.activeOrders(), [o]);
+      pickup.completeOrder(o);
+      expect(pickup.isCompleted(o), isTrue);
+      expect(pickup.activeOrders(), isEmpty);
+      expect(pickup.orders, [o]);
+    });
+
+    test('reset하면 주문·찜이 모두 지워진다', () {
+      final pickup = PickupStore();
+      order(pickup);
+      pickup.toggleFavorite(mockStores.first);
+      pickup.reset();
+      expect(pickup.orders, isEmpty);
+      expect(pickup.favoriteStoreIds, isEmpty);
     });
   });
 }
