@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:daily_romantic/core/location/geo.dart';
+import 'package:daily_romantic/core/location/routing_service.dart';
 import 'package:daily_romantic/core/utils/formatters.dart';
 import 'package:daily_romantic/features/pickup/data/mock_stores.dart';
 import 'package:daily_romantic/features/pickup/data/models.dart';
@@ -101,5 +102,49 @@ void main() {
     expect(mori.point.longitude, closeTo(126.92 + 0.02 * 0.3, 1e-6));
     // 201m ÷ 67m/분 ≈ 3분 (소수점 오차로 올림될 수 있음)
     expect(mori.walkMinutes, inInclusiveRange(3, 4));
+  });
+
+  group('길 안내', () {
+    RouteStep step(StepKind kind, double meters, [String road = '']) =>
+        RouteStep(
+          kind: kind,
+          roadName: road,
+          distanceMeters: meters,
+          location: hongdae,
+        );
+
+    test('안내 문구', () {
+      expect(step(StepKind.depart, 707).instruction, '출발해서 710m 이동');
+      expect(
+        step(StepKind.left, 183, '신촌로9길').instruction,
+        '좌회전 후 신촌로9길 따라 180m',
+      );
+      expect(step(StepKind.straight, 1234).instruction, '1.2km 직진');
+      expect(step(StepKind.arrive, 0).instruction, '목적지 도착');
+    });
+
+    test('몇 미터짜리 꺾임은 앞 단계에 합친다', () {
+      final simplified = simplifySteps([
+        step(StepKind.depart, 700),
+        step(StepKind.left, 5),
+        step(StepKind.right, 180, '신촌로9길'),
+        step(StepKind.right, 3),
+        step(StepKind.arrive, 0),
+      ]);
+      expect(simplified.map((s) => s.kind), [
+        StepKind.depart,
+        StepKind.right,
+        StepKind.arrive,
+      ]);
+      expect(simplified[0].distanceMeters, 705);
+      expect(simplified[1].distanceMeters, 183);
+    });
+
+    test('OSRM 방향 변환', () {
+      expect(StepKind.fromOsrm('turn', 'slight right'), StepKind.slightRight);
+      expect(StepKind.fromOsrm('end of road', 'left'), StepKind.left);
+      expect(StepKind.fromOsrm('continue', 'straight'), StepKind.straight);
+      expect(StepKind.fromOsrm('depart', null), StepKind.depart);
+    });
   });
 }
