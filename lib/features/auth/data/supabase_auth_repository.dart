@@ -54,6 +54,9 @@ class SupabaseAuthRepository extends AuthRepository {
     () => _auth.signInWithOAuth(
       OAuthProvider(provider.supabaseId),
       redirectTo: Env.authRedirectUrl,
+      // iOS 앱 안 브라우저(SFSafariViewController)는 로그인 후 dailyromantic://
+      // 주소로 넘어가지 못하고 멈춘다. Safari 앱으로 열면 앱으로 돌아올 수 있다.
+      authScreenLaunchMode: LaunchMode.externalApplication,
     ),
   );
 
