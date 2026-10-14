@@ -13,7 +13,7 @@ class PageScaffold extends StatelessWidget {
     this.onBack,
     required this.children,
     this.bottom,
-    this.top,
+    this.pinned,
   });
 
   final String title;
@@ -27,8 +27,8 @@ class PageScaffold extends StatelessWidget {
   /// 화면 하단에 고정되는 버튼 영역
   final Widget? bottom;
 
-  /// 제목 위에 보여줄 위젯 (예: 진행 중 주문 상태)
-  final Widget? top;
+  /// 로고 바로 아래에 고정되어 스크롤해도 움직이지 않는 위젯 (예: 진행 중 주문 알림)
+  final Widget? pinned;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +39,7 @@ class PageScaffold extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppHeader(),
+          ?pinned,
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
@@ -61,7 +62,6 @@ class PageScaffold extends StatelessWidget {
                       child: Text(backLabel!),
                     ),
                   ),
-                ?top,
                 const SizedBox(height: AppSpacing.xs),
                 Text(title, style: theme.textTheme.headlineSmall),
                 if (subtitle != null) ...[

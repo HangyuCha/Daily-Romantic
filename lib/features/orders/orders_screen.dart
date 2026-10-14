@@ -14,7 +14,8 @@ class OrdersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final orders = PickupScope.of(context).orders;
+    final pickup = PickupScope.of(context);
+    final orders = pickup.orders;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -65,13 +66,27 @@ class OrdersScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(
-                      order.code,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          order.code,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: pickup.isCompleted(order)
+                                ? scheme.onSurfaceVariant
+                                : scheme.primary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        _StatusChip(
+                          label: pickup.isCompleted(order)
+                              ? '픽업 완료'
+                              : pickup.stageOf(order).label,
+                          done: pickup.isCompleted(order),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -81,6 +96,33 @@ class OrdersScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
         ],
       ],
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.done});
+
+  final String label;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: done ? scheme.outline : scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: done ? scheme.onSurfaceVariant : scheme.primary,
+        ),
+      ),
     );
   }
 }

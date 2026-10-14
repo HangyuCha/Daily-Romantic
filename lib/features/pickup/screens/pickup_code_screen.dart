@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_header.dart';
 import '../../../shared/widgets/app_map.dart';
 import '../../../shared/widgets/soft_button.dart';
 import '../data/models.dart';
+import '../data/pickup_store.dart';
 
 /// S5. 픽업 코드 및 준비 상태. 뒤로가기 없는 플로우 종결 화면.
 /// 주문 탭에서 다시 열 때는 [showHomeButton]을 false로 둔다.
@@ -45,14 +46,70 @@ class _PickupCodeScreenState extends State<PickupCodeScreen> {
     super.dispose();
   }
 
+  Future<void> _complete(PickupStore pickup, PickupStage stage) async {
+    if (stage != PickupStage.ready) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('아직 준비 중이에요'),
+          content: const Text('가게에서 받으셨다면 픽업 완료로 바꿀게요.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('픽업 완료'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    pickup.completeOrder(widget.order);
+  }
+
+  /// 단계별 진행 바 최소값 (시연용으로 단계를 넘겼을 때 바도 따라가도록)
+  static const _stageFloor = {
+    PickupStage.preparing: 0.1,
+    PickupStage.packed: 0.6,
+    PickupStage.ready: 1.0,
+  };
+
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
+    final pickup = PickupScope.of(context);
+    final now = DateTime.now();
+    final stage = pickup.stageOf(order, now);
+    final completed = pickup.isCompleted(order);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = theme.textTheme.bodyMedium?.copyWith(
       color: scheme.onSurfaceVariant,
     );
+    final timeValue = 0.1 + 0.9 * order.progressAt(now);
+    final progress = completed
+        ? 1.0
+        : (timeValue > _stageFloor[stage]! ? timeValue : _stageFloor[stage]!);
+
+    final String emoji;
+    final String title;
+    final String message;
+    if (completed) {
+      emoji = '💝';
+      title = '픽업 완료!';
+      message = '${order.store.name}에서 픽업을 마쳤어요.\n마음이 잘 전해지길 바라요.';
+    } else if (stage == PickupStage.ready) {
+      emoji = '🛍️';
+      title = stage.headline;
+      message = '${order.store.name}에 들러\n아래 코드를 보여주세요.';
+    } else {
+      emoji = '🎁';
+      title = stage.headline;
+      message = '${order.store.name}에서 준비하고 있어요.\n목적지 도착 전에 들르세요!';
+    }
 
     return PopScope(
       canPop: !widget.showHomeButton,
@@ -68,23 +125,19 @@ class _PickupCodeScreenState extends State<PickupCodeScreen> {
                   padding: const EdgeInsets.all(AppSpacing.screenPadding),
                   children: [
                     const SizedBox(height: AppSpacing.md),
-                    const Text(
-                      '🎁',
+                    Text(
+                      emoji,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 56),
+                      style: const TextStyle(fontSize: 56),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      '픽업 준비 중이에요',
+                      title,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineSmall,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${order.store.name}에서 곧 준비돼요.\n목적지 도착 전에 들르세요!',
-                      textAlign: TextAlign.center,
-                      style: muted,
-                    ),
+                    Text(message, textAlign: TextAlign.center, style: muted),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       order.code,
@@ -93,56 +146,48 @@ class _PickupCodeScreenState extends State<PickupCodeScreen> {
                         fontSize: 40,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 6,
-                        color: scheme.primary,
+                        color: completed
+                            ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                            : scheme.primary,
                       ),
                     ),
                     Text(
-                      '매장에서 이 코드를 보여주세요',
+                      completed ? '사용한 픽업 코드' : '매장에서 이 코드를 보여주세요',
                       textAlign: TextAlign.center,
                       style: muted,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    Builder(
-                      builder: (context) {
-                        final now = DateTime.now();
-                        final stage = order.stageAt(now);
-                        // 막 주문했을 때도 진행 중인 게 보이도록 10%에서 시작
-                        final value = 0.1 + 0.9 * order.progressAt(now);
-                        return Column(
-                          children: [
-                            TweenAnimationBuilder<double>(
-                              tween: Tween(end: value),
-                              duration: const Duration(milliseconds: 600),
-                              builder: (context, v, _) => ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: v,
-                                  minHeight: 8,
-                                  backgroundColor: scheme.outline,
-                                ),
-                              ),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(end: progress),
+                      duration: const Duration(milliseconds: 600),
+                      builder: (context, v, _) => ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: v,
+                          minHeight: 8,
+                          backgroundColor: scheme.outline,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (final s in PickupStage.values) ...[
+                          if (s.index > 0) Text(' → ', style: muted),
+                          Text(
+                            s.label,
+                            style: muted?.copyWith(
+                              color: s == stage && !completed
+                                  ? scheme.primary
+                                  : null,
+                              fontWeight: s == stage && !completed
+                                  ? FontWeight.w700
+                                  : null,
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                for (final s in PickupStage.values) ...[
-                                  if (s.index > 0) Text(' → ', style: muted),
-                                  Text(
-                                    s.label,
-                                    style: muted?.copyWith(
-                                      color: s == stage ? scheme.primary : null,
-                                      fontWeight: s == stage
-                                          ? FontWeight.w700
-                                          : null,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        );
-                      },
+                          ),
+                        ],
+                      ],
                     ),
                     if (order.storePoint != null) ...[
                       const SizedBox(height: AppSpacing.lg),
@@ -187,21 +232,42 @@ class _PickupCodeScreenState extends State<PickupCodeScreen> {
                   ],
                 ),
               ),
-              if (widget.showHomeButton)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenPadding,
-                    AppSpacing.sm,
-                    AppSpacing.screenPadding,
-                    AppSpacing.md,
-                  ),
-                  child: SoftButton(
-                    label: '처음으로',
-                    onPressed: () => Navigator.of(
-                      context,
-                    ).popUntil((route) => route.isFirst),
-                  ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.sm,
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!completed) ...[
+                      FilledButton(
+                        onPressed: () => _complete(pickup, stage),
+                        child: const Text('픽업했어요'),
+                      ),
+                      if (stage != PickupStage.ready)
+                        TextButton(
+                          onPressed: () => pickup.advanceStage(order),
+                          child: Text(
+                            '시연용 · 가게 상태를 '
+                            '\'${PickupStage.values[stage.index + 1].label}\'(으)로',
+                          ),
+                        ),
+                    ],
+                    if (widget.showHomeButton) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      SoftButton(
+                        label: '처음으로',
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),

@@ -175,12 +175,15 @@ enum PaymentMethod {
 }
 
 enum PickupStage {
-  preparing('가게 준비'),
-  packed('포장 완료'),
-  ready('픽업 가능');
+  preparing('가게 준비', '가게에서 준비 중이에요'),
+  packed('포장 완료', '포장이 끝났어요'),
+  ready('픽업 가능', '지금 픽업할 수 있어요');
 
-  const PickupStage(this.label);
+  const PickupStage(this.label, this.headline);
   final String label;
+
+  /// 홈 알림·픽업 코드 화면의 안내 문구
+  final String headline;
 }
 
 /// 예약 완료된 주문 (S5, 주문 탭)
@@ -210,8 +213,8 @@ class PickupOrder {
   final PaymentMethod paymentMethod;
   final LatLng? storePoint;
 
-  /// 픽업 시각이 지나고 이 시간까지는 '진행 중'으로 본다.
-  static const keepActiveAfterPickup = Duration(minutes: 30);
+  /// 픽업 완료를 누르지 않아도 픽업 시각 뒤 이 시간이 지나면 진행 중 목록에서 뺀다.
+  static const keepActiveAfterPickup = Duration(hours: 2);
 
   /// 주문부터 픽업 시각까지 지난 비율 (0~1)
   double progressAt(DateTime now) {
@@ -220,7 +223,7 @@ class PickupOrder {
     return (now.difference(createdAt).inMilliseconds / total).clamp(0.0, 1.0);
   }
 
-  /// 가게 쪽 상태 연동 전까지는 시간 흐름으로 준비 단계를 추정한다.
+  /// 시간 흐름으로 추정한 준비 단계. 실제 표시는 PickupStore.stageOf를 쓴다.
   PickupStage stageAt(DateTime now) {
     final p = progressAt(now);
     if (p >= 1) return PickupStage.ready;

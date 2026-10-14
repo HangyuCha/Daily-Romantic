@@ -6,6 +6,10 @@ import 'package:daily_romantic/features/auth/data/auth_repository.dart';
 import 'package:daily_romantic/features/auth/data/demo_auth_repository.dart';
 import 'package:daily_romantic/features/auth/widgets/auth_validators.dart';
 
+import 'package:daily_romantic/features/pickup/data/mock_stores.dart';
+import 'package:daily_romantic/features/pickup/data/models.dart';
+import 'package:daily_romantic/features/pickup/data/pickup_store.dart';
+
 import 'fakes.dart';
 
 void main() {
@@ -147,5 +151,28 @@ void main() {
     await tester.tap(find.text('카카오로 시작하기'));
     await tester.pumpAndSettle();
     expect(find.text('어디로 가세요?'), findsOneWidget);
+  });
+
+  test('계정이 바뀌면 이전 주문이 지워진다', () async {
+    // 앱 상태 클래스 대신 같은 규칙을 PickupStore + 인증 흐름으로 확인
+    final auth = DemoAuthRepository(
+      signedInUser: const AppUser(id: 'a', nickname: 'A'),
+    );
+    final pickup = PickupStore();
+    String? userId = auth.currentUser?.id;
+    final sub = auth.authStateChanges().listen((u) {
+      if (u?.id == userId) return;
+      userId = u?.id;
+      pickup.reset();
+    });
+    pickup.placeOrder(
+      Cart(mockStores.first)..setQuantity(mockStores.first.menu.first, 1),
+      pickupInMinutes: 15,
+      paymentMethod: PaymentMethod.card,
+    );
+    await auth.signOut();
+    await Future<void>.delayed(Duration.zero);
+    expect(pickup.orders, isEmpty);
+    await sub.cancel();
   });
 }
