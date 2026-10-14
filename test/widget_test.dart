@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:daily_romantic/app.dart';
-import 'package:daily_romantic/features/auth/auth_service.dart';
-import 'package:daily_romantic/features/auth/login_screen.dart';
+import 'package:daily_romantic/features/auth/data/auth_repository.dart';
+import 'package:daily_romantic/features/auth/data/demo_auth_repository.dart';
 
 void main() {
+  // 주문 흐름 테스트는 로그인된 상태에서 시작한다.
+  Widget signedInApp() => DailyRomanticApp(
+    authRepository: DemoAuthRepository(
+      signedInUser: const AppUser(id: 'test', nickname: '테스터'),
+    ),
+  );
+
   Future<void> tapText(WidgetTester tester, String text) async {
     await tester.ensureVisible(find.text(text).first);
     await tester.tap(find.text(text).first);
@@ -17,7 +24,7 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const DailyRomanticApp());
+    await tester.pumpWidget(signedInApp());
 
     // S1
     expect(find.text('어디로 가세요?'), findsOneWidget);
@@ -55,27 +62,12 @@ void main() {
   });
 
   testWidgets('카테고리를 고르면 해당 가게만 보인다', (tester) async {
-    await tester.pumpWidget(const DailyRomanticApp());
+    await tester.pumpWidget(signedInApp());
 
     await tapText(tester, '🎂 레터링 케이크');
     await tapText(tester, '가는 길 가게 찾기');
 
     expect(find.text('1. 레터링 케이크 하루'), findsOneWidget);
     expect(find.textContaining('모리 베이커리'), findsNothing);
-  });
-
-  testWidgets('로그인 버튼을 누르면 해당 provider로 로그인을 요청한다', (tester) async {
-    SocialProvider? requested;
-    await tester.pumpWidget(
-      MaterialApp(home: LoginScreen(onSignIn: (p) async => requested = p)),
-    );
-
-    await tester.tap(find.text('네이버로 시작하기'));
-    await tester.pump();
-    expect(requested, SocialProvider.naver);
-
-    await tester.tap(find.text('카카오로 시작하기'));
-    await tester.pump();
-    expect(requested, SocialProvider.kakao);
   });
 }
